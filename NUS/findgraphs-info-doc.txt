@@ -44,7 +44,7 @@ install.packages("[PACKAGE NAME]")
 Step 1 - Computing f2 stats:
 
 - The input files for computing f2 stats are created using the bash command "convertf" from plink .fam files.
-- The steps to do this are outlined in the "input-preparation.txt" file courtesy of Yenyi
+- The steps to do this are outlined in the "input-preparation.txt" file.
 - The convertf command can be performed in the terminal by loading the qpbrute HPC module:
 source /app1/ebenv
 module load qpbrute
