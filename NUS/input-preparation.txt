@@ -1,0 +1,38 @@
+# Need to prepare fam file by replacing column 6 containing "-9"s to sample names in column 2
+cd /hpctmp/theo.a/Hill-Myna-Analysis/5.Admixture-Graph/5.findgraphs/SNP-set-7-r3/input-files
+awk '{$6=$2; print}' ../../../3.SNP-calling/SNP-set-7-all/round-3/plink/SNP-set-7-round3-complete.fam \
+ > ./SNP-set-7-round3-complete.pedind
+
+- Copy CM_chr_names.txt file to findgraphs folder
+
+- Download genome sequence report from GenBank and make a chr_names.txt file with chrom number in 1st column
+  and matching chrom name in second column.
+
+# Replace all chromosome scaffold numbers in .bim file to chromosome numbers by matching with CM_chr_names.txt file
+cd /hpctmp/theo.a/Hill-Myna-Analysis/5.Admixture-Graph/5.findgraphs
+awk 'FNR==NR{a[$2]=$1;next} {for (i in a)sub(i, a[i]);print}' CM_chr_names.txt \
+../3.SNP-calling/SNP-set-7-all/round-3/plink/SNP-set-7-round3-complete.bim > SNP-set-7-r3/input-files/SNP-set-7-round3-complete-renamed.bim
+
+# Copy bed file to folder
+cd SNP-set-7-r3/input-files
+cp ../../../3.SNP-calling/SNP-set-7-all/round-3/plink/SNP-set-7-round3-complete.bed . 
+
+# Create the par.PED.EIGENSTRAT file that will serve as the input for the command "convertf"
+genotypename:    SNP-set-7-round3-complete.bed
+snpname:         SNP-set-7-round3-complete-renamed.bim
+indivname:       SNP-set-7-round3-complete.pedind
+outputformat:    EIGENSTRAT
+genotypeoutname: SNP-set-7-round3.geno
+snpoutname:      SNP-set-7-round3.snp
+indivoutname:    SNP-set-7-round3.ind
+familynames: NO
+numchrom: 37
+# EOF
+
+# Run convertf to get input files
+source /app1/ebenv
+module load qpbrute
+cd /hpctmp/theo.a/Hill-Myna-Analysis/5.Admixture-Graph/5.findgraphs/SNP-set-7-r3/input-files
+convertf -p par.PED.EIGENSTRAT
+
+- Edit .ind file from convertf: change the last column to designate samples to populations
