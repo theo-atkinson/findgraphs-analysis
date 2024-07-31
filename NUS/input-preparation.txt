@@ -1,0 +1,55 @@
+################################################ STEP 1: Prepare .fam file ################################################
+# Replace columns 1 and 6 containing "1"s and "-9"s to sample names in column 2
+cd /Volumes/Shorebirb/Yenyi_LSP/12_qpbrute
+awk '{$1=$6=$2; print}' /Volumes/Shorebirb/Yenyi_LSP/6_plink/LSP_b11/LSPb11PostPrune.fam > ./LSPb11PostPrune.pedind
+
+################################################ STEP 2: Prepare .bim file ################################################
+# Create chromosome scaffold and number .txt file
+# Download the full sequence report for the assembly on NCBI and save as a .txt file
+cd /Volumes/Shorebirb/Yenyi_LSP/12_qpbrute
+grep -v "^#" ./Pluvialis_apricaria_chr_assembly_info.txt |
+grep CM0 |
+cut -f 3,5 > Pluvialis_apricaria_chr_names.txt
+# Manually rename the W and Z sex chromosomal ID to integers
+
+# Replace all chromosome scaffold numbers in .bim file to chromosome numbers by matching with chr_names.txt file
+cd /Volumes/Shorebirb/Yenyi_LSP/12_qpbrute
+awk 'FNR==NR{a[$2]=$1;next} {for (i in a)sub(i, a[i]);print}' Pluvialis_apricaria_chr_names.txt \
+/Volumes/Shorebirb/Yenyi_LSP/6_plink/LSP_b11/LSPb11PostPrune.bim > LSPb11PostPrune_renamed.bim
+
+# OR use sed to find and replace by brute force
+sed -e 's/CM030007.1/1/g' \
+-e 's/CM030008.1/2/g' \
+etc. etc. until all chromosomal scaffolds are listed \
+/path/to/.bim/file > /path/to/new/renamed.bim/file
+
+################## STEP 3: Move the edited .fam and bim files and original .bed file into qpBrute folder ##################
+# Easily done manually. 
+# Only original .bed file needs to be moved if above code is followed since all output is directed into qpBrute folder.
+
+########################################## STEP 4: Create par.PED.EIGENSTRAT file #########################################
+##### START OF CONVERTF FILE ##### 
+genotypename:    LSPb11PostPrune.bed
+snpname:         LSPb11PostPrune_renamed.bim
+indivname:       LSPb11PostPrune.pedind
+outputformat:    EIGENSTRAT 
+genotypeoutname: LSPb11.converted.geno
+snpoutname:      LSPb11.converted.snp
+indivoutname:    LSPb11.converted.ind
+familynames: NO 
+numchrom: 36
+##### END OF CONVERTF FILE. Saved as par.PED.EIGENSTRAT #####
+
+###################### STEP 5: Run convertf with .PED.EIGENSTRAT file to generate qpBrute input files ######################
+conda activate qpbrute
+cd /Volumes/Shorebirb/Yenyi_LSP/12_qpbrute
+convertf -p par.PED.EIGENSTRAT
+
+################################################### STEP 6: Run qpBrute ####################################################
+### DATE 2 MAR 2022
+# Edit .ind file from convertf: change the last column to designate samples to populations. 
+# Create popcode .txt file without headers and in same order as .ind file,
+# and use it to change last column of .ind file to assigned populations
+cd /Volumes/Shorebirb/Yenyi_LSP/12_qpbrute
+awk 'FNR==NR{a[NR]=$4;next}{$3=a[FNR]}1' LSP-b11-popcode-master.txt \
+LSPb11.converted.ind > LSPb11.converted_edited.ind

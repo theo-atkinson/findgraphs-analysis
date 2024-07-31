@@ -1,0 +1,146 @@
+FindGraphs by Admixtools information document:
+
+- Similar to qpBrute, FindGraphs is a program to obtain admixture graphs to better understand introgression events between populations.
+
+- The actual find_graphs() command works by starting with a random graph and iteratively changing aspects of the graph in order to fit to the data better.
+
+- As it is part of the admixtools2 suite of commands, it allows for a lot of customisation. For example choosing exactly how many admixture events to analyse or   
+  what depth to perform analysis to. admixtools2 also provides ability to do a lot of pre and post-processing of the data such as bootstrapping.
+
+- The main idea of the program is to carry out findgraphs many times to get a general idea of likely topologies that support the data the best. The author 
+  indicates in their paper introducing the program (https://elifesciences.org/articles/85492) that it is often very difficult to obtain a single topology that 
+  fits the data perfectly as true admixture patterns are likely to be very complex. The ability to customise many parameters naturally results in a more 
+  holistic understanding of the different topologies and therefore a greater understanding of the data.
+
+----------------------------------
+SNP sets for use with findgraphs:
+
+- Advisable not to do any missingness filtering as this can be automatically performed when computing the f2 stats (See Step 1 below). The missingness 
+  filtering is performed to the population level so that at least 1 individual is represented from each population at each site. This will ensure a maximal 
+  number of SNPs are retained for computing unbiased f stats.
+
+- Linkage pruning does not need to be performed. The author mentions that "The block jackknife method used for computing standard errors accounts for 
+  correlations between nearby SNPs. However, LD pruning might help in speeding things up and reducing the memory footprint." - GitHub Issue 42. Note that if 
+  linkage pruning is performed, it should be the last step of SNP filtering, otherwise potentially informative SNPs will be lost. Missingness filtering when 
+  computing f stats should therefore not be used if linkage pruning is being performed prior to computing f stats, e.g. with plink.
+
+-------------------------------
+Running findgraphs on NUS HPC:
+
+- Note that I did all my analysis using R 4.2.2 and am not sure how my scripts behave in different versions.
+
+# Running R 4.2.2
+source /app1/ebenv
+module load R/4.2.2-foss-2022b
+
+- The following R packages will need to be installed if not already:
+  foreach, doParallel, admixtools, dplyr, ggplot2, data.table
+
+# install R package
+R
+install.packages("[PACKAGE NAME]")
+
+----------------------------
+Step 1 - Computing f2 stats:
+
+- The input files for computing f2 stats are created using the bash command "convertf" from plink .fam files.
+- The steps to do this are outlined in the "input-preparation.txt" file courtesy of Yenyi
+- The convertf command can be performed in the terminal by loading the qpbrute HPC module:
+source /app1/ebenv
+module load qpbrute
+
+- The following for computing f2 stats is performed in R
+R
+
+# Load packages
+library("admixtools")
+
+# Set working directory
+setwd("[DIRECTORY WITH INPUT FILES]")
+
+# Calculate f2 stats
+extract_f2("[INPUT FILES NAME]", "[OUTPUT DIRECTORY]", auto_only = FALSE, adjust_pseudohaploid = FALSE, overwrite = TRUE)
+
+- It is also possible to compute f2 stats on a pairwise sample rather than population level using extract_counts. This allows for ease of adding / removing 
+  individuals within populations if required. A caveat is that this will introduce increased bias from missing data. This process is described at the bottom of 
+  the f stats info page: https://uqrmaie1.github.io/admixtools/articles/fstats.html
+
+- Before running the following scripts, I would suggest running the find_graphs() command through the R terminal to understand what is happening and what the 
+  different perameters do. This can be done with the following code once edited accordingly:
+
+# Load in f2 stats for desired populations
+f2_stats <- f2_from_precomp("[PATH TO F2 STATS DIRECTORY]", pops = c("[POPULATION NAMES]"))
+
+# Run findgraphs with 1 admixture event for 50 generations or until 10 generations of no improvement
+res <- find_graphs(f2_stats, numadmix = 1, outpop = "[OUTGROUP]", stop_gen = 50, stop_gen2 = 10, numgraphs = 5, plusminus_generations = 5)
+res
+
+--------------------
+Step 2: Initial Scan
+
+- In the original paper the authors suggest running findgraphs initially with many different admixture events to determine the optimal number 
+  of events before rerunning findgraphs with more iterations.
+
+- This can be performed by running the "initial-scan.r" file that will run findgraphs in parallel a set number of times for various numbers of admixture events
+  that can be set at the top of the script.
+- I would suggest submitting this as a job to the hpc as it may take a while to run. This can be done as normal using the file "jobscript-initial-scan".
+- This will output a log file "initial-scan-log.txt" that will update while the script is running, and can be used to predict roughly how long it will take to 
+  complete.
+- A .jpg plot will also be outputted for interpreting the results, with each dot representing the best fitting graph for each findgraphs iteration and the blue 
+  line indicating the graph with the lowest residual for each number of admixture events. A lower worst residual means a better fit, with more admixture events 
+  having lower residuals as they will always appear to fit the data better but are likely to be overfitting. The worst residual is a less biased metric than 
+  score when comparing graphs with differet numbers of admixture events. The author suggests that in general the optimal graphs are those with residual scores 
+  < 3 and with the fewest number of admixture events.
+- The "initial-scan-result.rds" file contains a tibble of the best fitting graphs for each iteration.
+
+- For reference I ran 100 iterations for 1-10 admixture events but my dataset is quite small (80,000 SNPs).
+- Larger datasets may benefit from reducing the find_graphs() parameters (line 36) and the qpgraph(numstart) parameter (line 44) to improve speed without 
+  compromising too much on iterations. These are currently set to extremely conservative values.
+
+--------------------
+Step 3: Focused Scan
+
+- Once an idea of how many admixture events produce the most optimal graphs, more iterations of findgraphs can be run to hone in on the best fitting topologies.
+
+- This can be performed by running the "focused-scan.r" script in a similar manner to the initial scan.
+- As with the initial scan, a log file will be outputted as well as a .rds file with the results tibble.
+- Again, larger datasets may need to adjust parameters on lines 33 and 37.
+
+-------------------------
+Step 4: Topology Analysis
+
+- This step is to obtain the information required to interpret the results of the focused scan.
+
+- This can be performed by running the "topology-analysis.r" script, again setting various parameters at the top of the script.
+- This script will perform the following steps in this order:
+  1. Apply admixture constraints to remove graphs with unwanted topologies. This is useful if the best topologies does not make biological sense. These contraints 
+     can include the number of admixture events into a population and the topology event order. This can be defined at the top of the script. See the 
+     documentation on satisfies_numadmix() and satisfies_eventorder() for how to implement this:
+     https://uqrmaie1.github.io/admixtools/reference/index.html
+     The output "focused-scan-constrained.RDS" will have these applied contraints (this will be identical to "focused-scan-results.RDS" if no constraints are
+     defined).
+  2. Plot a scattergraph of score vs worst residual. Each point is the best graph from each findgraphs iteration.
+  3. Plot a histogram of score. Each bar usually depicts each topology unless scores are very similar. Note that the number of times findgraphs resolves on a 
+     certain topology does not indicate how well that topology fits the data.
+  4. Identify graphs with the same topology and output a "topology-list.csv" file with all graphs ranked best to worst.
+  5. Create a "graph-topology-[N]" directory and into this directory ouput a plot of each graph and a .csv file list of all graphs for each topology.
+  6. Calculate boostrap fits for the best graph of each topology (this can take a long time with many bootstrap iterations) and output as .rds files to a
+     "graph-fits" directory.
+  7. Compare bootstrap fits to test for significance between any given topology against topology 1, and output to the "bootstrap-results" directory. The value 
+     of p_emp should be used to determine significance in the same way a p value does.
+
+- The script is designed to be run multiple times to analyse additional topologies if required. As such, if the output for any step is already present in the 
+  directory, the script will not run this step again. For example 5 topologies may be analysed first, but significance to the first topology is not yet reached
+  so the max_tops parameter is increased to 10; the script will skip steps 1-4, and only carry out steps 5-7 for topologies 6-10.
+- The log file will indicate which steps have been performed, and will update as the script is running.
+
+---------------------------
+Step 5: Increase Complexity
+
+- The authors suggest that once the best fitting topologie(s) for a given number of admixture events have been identified, this should be tested for robustness
+  by rerunning findgraphs at a greater complexity.
+
+- This can be performed by rerunning the focused scan having set the number of admixture events to be one greater than what was previously used and then
+  performing the topology analysis.
+- The previous topology that matches (other than the additional admixture event) to the new best fitting, biologically plausible topology, can be assumed to be
+  robust to additional complexity.
