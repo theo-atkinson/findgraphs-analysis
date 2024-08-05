@@ -29,8 +29,8 @@ extract_f2("[INPUT FILES NAME]", "[OUTPUT DIRECTORY]", auto_only = FALSE, adjust
 <br />
 
 ## Script 1: Initial Scan
-The script "initial-scan.r" will run findgraphs in parallel a set number of times for a various numbers of admixture events. 
-These can be set set at the top of the script using the _iterations_ and _max_admix_ variables respectively.
+The script "initial-scan.r" will run findgraphs in parallel a set number of times for a various number of admixture events. 
+These can be set at the top of the script using the _iterations_ and _max_admix_ variables respectively.
 #### Output
 initial-scan-result.rds
 * A tibble of the best fitting graphs from each iteration.
