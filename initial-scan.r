@@ -44,7 +44,8 @@ cumulative_results <- foreach(i = 1:iterations, .combine = "c", .inorder = TRUE)
         min_scores$worst_residual <- worst_res$worst_residual
 
         cat(paste("----- COMPLETED ITERATION", i, "/", iterations, "FOR", admixture_events, "ADMIXTURE EVENTS -----\n"))
-
+        sink()
+        
         return(list(min_scores))
     }
 initial_scan_results <- bind_rows(cumulative_results)
