@@ -38,6 +38,7 @@ cumulative_results <- foreach(i = 1:iterations, .combine = "c", .packages = c("a
     min_scores$worst_residual <- worst_res$worst_residual
 
     cat(paste("----- COMPLETED ITERATION", i, "/", iterations, "-----\n"))
+    sink()
 
     return(list(min_scores))
 }
