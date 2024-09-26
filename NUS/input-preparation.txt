@@ -1,23 +1,22 @@
-# Need to prepare fam file by replacing column 6 containing "-9"s to sample names in column 2
+# Need to prepare fam file by replacing column 6 containing "-9"s to same sample names in column 2, and output to a findgraphs input directory
 cd /hpctmp/theo.a/Hill-Myna-Analysis/5.Admixture-Graph/5.findgraphs/SNP-set-7-r3/input-files
 awk '{$6=$2; print}' ../../../3.SNP-calling/SNP-set-7-all/round-3/plink/SNP-set-7-round3-complete.fam \
  > ./SNP-set-7-round3-complete.pedind
 
-- Copy CM_chr_names.txt file to findgraphs folder
-
-- Download genome sequence report from GenBank and make a chr_names.txt file with chrom number in 1st column
+- Download genome sequence report of reference from GenBank and make a chr_names.txt file with chrom number in 1st column
   and matching chrom name in second column.
+- Copy chr_names.txt file to findgraphs input directory
 
-# Replace all chromosome scaffold numbers in .bim file to chromosome numbers by matching with CM_chr_names.txt file
+# Replace all chromosome scaffold numbers in .bim file to chromosome numbers by matching with chr_names.txt file
 cd /hpctmp/theo.a/Hill-Myna-Analysis/5.Admixture-Graph/5.findgraphs
 awk 'FNR==NR{a[$2]=$1;next} {for (i in a)sub(i, a[i]);print}' CM_chr_names.txt \
 ../3.SNP-calling/SNP-set-7-all/round-3/plink/SNP-set-7-round3-complete.bim > SNP-set-7-r3/input-files/SNP-set-7-round3-complete-renamed.bim
 
-# Copy bed file to folder
+# Copy bed file to findgraphs input input
 cd SNP-set-7-r3/input-files
 cp ../../../3.SNP-calling/SNP-set-7-all/round-3/plink/SNP-set-7-round3-complete.bed . 
 
-# Create the par.PED.EIGENSTRAT file that will serve as the input for the command "convertf"
+# Create the par.PED.EIGENSTRAT file within input directory that will serve as the input for the command "convertf". Edit accordingly.
 genotypename:    SNP-set-7-round3-complete.bed
 snpname:         SNP-set-7-round3-complete-renamed.bim
 indivname:       SNP-set-7-round3-complete.pedind
