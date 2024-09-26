@@ -20,9 +20,9 @@ SNP sets for use with findgraphs:
   number of SNPs are retained for computing unbiased f stats.
 
 - Linkage pruning does not need to be performed. The author mentions that "The block jackknife method used for computing standard errors accounts for 
-  correlations between nearby SNPs. However, LD pruning might help in speeding things up and reducing the memory footprint." - GitHub Issue 42. Note that if 
-  linkage pruning is performed, it should be the last step of SNP filtering, otherwise potentially informative SNPs will be lost. Missingness filtering when 
-  computing f stats should therefore not be used if linkage pruning is being performed prior to computing f stats, e.g. with plink.
+  correlations between nearby SNPs. However, LD pruning might help in speeding things up and reducing the memory footprint." - admixtools GitHub Issue 42. Note   
+  that if linkage pruning is performed, it should be the last step of SNP filtering, otherwise potentially informative SNPs will be lost. Missingness filtering 
+  when computing f stats should therefore not be used if linkage pruning is being performed prior to computing f stats, e.g. with plink.
 
 -------------------------------
 Running findgraphs on NUS HPC:
@@ -39,6 +39,10 @@ module load R/4.2.2-foss-2022b
 # install R package
 R
 install.packages("[PACKAGE NAME]")
+
+# admixtools needs to be installed in a slightly different way
+install.packages("devtools") # if "devtools" is not installed already
+devtools::install_github("uqrmaie1/admixtools")
 
 ----------------------------
 Step 1 - Computing f2 stats:
