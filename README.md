@@ -5,7 +5,7 @@ These scripts follow the workflow for fitting admixture graphs as described in t
 
 Various parameters must be set at the top of the scripts before running.
 
-See the NUS folder for files to run scripts in the NUS HPC system and for more info on workflow.
+See the NUS folder for an example script on how to create the input files, how to run scripts in the NUS HPC system, and for more info on workflow.
 
 <br />
 
