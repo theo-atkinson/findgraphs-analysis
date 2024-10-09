@@ -12,7 +12,7 @@ setwd("[PATH TO TOPOLOGY ANALYSIS OUTPUT DIRECTORY]")
 f2_dir <- "[PATH TO F2 STATS DIRECTORY]"
 populations <- c("[POPULATION NAMES]")
 focused_scan <- readRDS("[PATH TO FOCUSED SCAN .RDS FILE]")
-max_tops <- [MAXIMUM NUMBER OF BEST TOPOLOGIES TO BE ANALYSED]
+max_topologies <- [MAXIMUM NUMBER OF BEST TOPOLOGIES TO BE ANALYSED]
 bootstraps <- [NUMBER OF BOOTSTRAP ITERATIONS]
 admix_constraints <- tribble( # OPTIONAL, CAN LEAVE LIKE THIS
     ~pop, ~min, ~max,
