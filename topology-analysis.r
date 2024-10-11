@@ -125,7 +125,7 @@ for (i in unique(focused_scan$topology)) {
 graph_fit <- function(top_num) {
     set.seed(16121998)
     graph_num <- focused_scan[which(focused_scan$topology == top_num, arr.ind = TRUE)[1], ]
-    fit <- qpgraph_resample_multi(f2_stats, list(focused_scan$graph[[graph_num$row_id]]), nboot = bootstraps, f3basepop = outgroup)
+    fit <- qpgraph_resample_multi(f2_stats, list(focused_scan$graph[[graph_num$row_id]]), nboot = bootstraps, f3basepop = out_group)
     saveRDS(fit, file = paste0("graph-fits/fit-top-", top_num, ".rds"))
 }
 
