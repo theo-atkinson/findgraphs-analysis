@@ -11,6 +11,7 @@ library("data.table")
 setwd("[PATH TO TOPOLOGY ANALYSIS OUTPUT DIRECTORY]")
 f2_dir <- "[PATH TO F2 STATS DIRECTORY]"
 populations <- c("[POPULATION NAMES]")
+out_group <- "[OUTGROUP NAME]"
 focused_scan <- readRDS("[PATH TO FOCUSED SCAN .RDS FILE]")
 max_topologies <- [MAXIMUM NUMBER OF BEST TOPOLOGIES TO BE ANALYSED]
 bootstraps <- [NUMBER OF BOOTSTRAP ITERATIONS]
@@ -124,7 +125,7 @@ for (i in unique(focused_scan$topology)) {
 graph_fit <- function(top_num) {
     set.seed(16121998)
     graph_num <- focused_scan[which(focused_scan$topology == top_num, arr.ind = TRUE)[1], ]
-    fit <- qpgraph_resample_multi(f2_stats, list(focused_scan$graph[[graph_num$row_id]]), nboot = bootstraps, f3basepop = "Jalla")
+    fit <- qpgraph_resample_multi(f2_stats, list(focused_scan$graph[[graph_num$row_id]]), nboot = bootstraps, f3basepop = outgroup)
     saveRDS(fit, file = paste0("graph-fits/fit-top-", top_num, ".rds"))
 }
 
